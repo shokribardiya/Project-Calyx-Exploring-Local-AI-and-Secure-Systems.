@@ -1,0 +1,416 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>CALYX — Local AI and defensive engineering · Oblivion</title>
+<meta name="description" content="CALYX is an Oblivion engineering initiative exploring local AI, model collaboration and defensive cybersecurity.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23000'/%3E%3Ccircle cx='16' cy='18' r='8' fill='none' stroke='%23fff' stroke-width='3'/%3E%3C/svg%3E">
+<style>
+/* ===== Tokens ===== */
+:root{--st:44,110,190;--sb:150,196,232;--cl:255,255,255;--ca:.9;--warm:0;--stars:0;--moon:.25;
+--ink:#050609;--paper:#f2ede0;--mut:#9aa3b5;--amber:#e8a860;--clay:#e07a55;--blue:#6fa3d8;--line:rgba(255,255,255,.16);
+--serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;--sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:70px}
+body{margin:0;background:#000;color:#fff;font:17px/1.65 var(--sans);overflow-x:hidden}
+a{color:inherit}a:focus-visible,button:focus-visible,summary:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--amber);outline-offset:3px}
+h1,h2,h3{font-family:var(--serif);font-weight:400;line-height:1.08;margin:0}
+.mono{font-family:var(--mono);font-size:.78rem;color:var(--mut);letter-spacing:.02em}
+/* ===== Sky ===== */
+#sky{position:fixed;inset:0;z-index:-2;background:linear-gradient(rgb(var(--st)),rgb(var(--sb)));overflow:hidden}
+#sky .glow{position:absolute;inset:0;background:radial-gradient(ellipse 80% 40% at 30% 100%,rgba(255,170,90,.75),transparent 70%);opacity:var(--warm)}
+#sky .stars{position:absolute;inset:0;opacity:var(--stars);background:
+radial-gradient(1px 1px at 12% 18%,#fff,transparent),radial-gradient(1px 1px at 28% 62%,#fff,transparent),radial-gradient(1.5px 1.5px at 44% 12%,#fff,transparent),radial-gradient(1px 1px at 61% 38%,#fff,transparent),radial-gradient(1px 1px at 77% 22%,#fff,transparent),radial-gradient(1.5px 1.5px at 88% 55%,#fff,transparent),radial-gradient(1px 1px at 8% 80%,#fff,transparent),radial-gradient(1px 1px at 53% 74%,#fff,transparent),radial-gradient(1px 1px at 93% 8%,#fff,transparent),radial-gradient(1px 1px at 36% 90%,#fff,transparent)}
+#moon{position:absolute;top:9%;left:7%;width:min(15vw,110px);aspect-ratio:1;border-radius:50%;opacity:var(--moon);background:radial-gradient(circle at 62% 40%,#eef3fb,#9fb4d2 70%);box-shadow:inset -18px -6px 0 rgba(8,14,34,.55)}
+.cl{position:absolute;left:-20%;width:140%;height:42%;opacity:var(--ca);animation:drift 240s ease-in-out infinite alternate;will-change:transform}
+.cl i{position:absolute;display:block;border-radius:50%;filter:blur(18px);background:rgb(var(--cl))}
+.c1{top:4%;animation-duration:260s}.c2{top:30%;animation-duration:340s;animation-direction:alternate-reverse;opacity:calc(var(--ca)*.7)}.c3{bottom:-6%;animation-duration:210s}
+@keyframes drift{from{transform:translate3d(-5%,0,0)}to{transform:translate3d(5%,1.5%,0)}}
+#grain{position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.08;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E")}
+#bird{position:fixed;top:0;left:0;z-index:-1;width:34px;opacity:0;pointer-events:none}
+#bird path{fill:none;stroke:rgba(10,14,30,.8);stroke-width:2.2;stroke-linecap:round;transform-origin:20px 12px;animation:flap 1.6s ease-in-out infinite}
+@keyframes flap{0%,55%{transform:scaleY(1)}70%{transform:scaleY(.4)}85%{transform:scaleY(1.15)}100%{transform:scaleY(1)}}
+/* ===== Header ===== */
+header{position:fixed;top:0;left:0;right:0;z-index:20;display:flex;align-items:center;gap:20px;padding:12px clamp(16px,4vw,48px);background:linear-gradient(rgba(0,0,0,.55),transparent)}
+header .brand{display:flex;align-items:center;gap:10px;text-decoration:none;font-family:var(--serif);font-size:1.25rem}
+nav{margin-left:auto;display:flex;gap:4px;align-items:center}
+nav a{padding:6px 10px;text-decoration:none;font-size:.88rem;border-bottom:1px solid transparent;opacity:.8}
+nav a[aria-current]{border-color:var(--amber);opacity:1}
+.tog{display:flex;border:1px solid var(--line);border-radius:99px;overflow:hidden;background:rgba(0,0,0,.35)}
+.tog button,.mbtn{background:none;border:0;color:#fff;font:inherit;font-size:.78rem;padding:6px 11px;cursor:pointer}
+.tog button[aria-pressed=true]{background:#fff;color:#000}
+.mbtn{display:none;border:1px solid var(--line);border-radius:6px}
+@media(max-width:900px){.mbtn{display:block;margin-left:auto}nav{display:none;position:absolute;top:100%;left:0;right:0;flex-direction:column;align-items:stretch;background:rgba(3,4,8,.97);padding:10px 16px}nav.open{display:flex}nav a{padding:12px 6px}}
+/* ===== Layout ===== */
+.pan{background:rgba(5,6,9,.86);padding:clamp(64px,10vw,130px) clamp(18px,6vw,90px)}
+.wrap{max-width:1080px;margin:0 auto}
+h2{font-size:clamp(2rem,5vw,3.6rem);margin:10px 0 24px;max-width:18ch}
+p{max-width:66ch;margin:0 0 1em;color:#d7dbe6}
+.hero{min-height:100svh;display:flex;flex-direction:column;justify-content:flex-end;padding:110px clamp(18px,6vw,90px) 40px;text-shadow:0 1px 18px rgba(0,0,0,.35)}
+.hero h1{font-size:clamp(3.6rem,13vw,10rem);letter-spacing:-.03em}
+.hero h2{font-size:clamp(1.6rem,4vw,2.8rem);font-style:italic;max-width:none;margin:6px 0 18px}
+.hero p{color:#fff;font-size:1.12rem}
+.scroll{margin-top:28px;display:flex;gap:10px;align-items:center}.scroll b{display:block;width:1px;height:38px;background:#fff;opacity:.7}
+.badge{display:inline-block;font:600 .72rem var(--mono);padding:3px 9px;border:1px solid var(--line);border-radius:99px;color:var(--amber);margin:0 6px 6px 0}
+.badge.s{color:var(--blue)}.badge.i{color:#e0a0a0}
+.grid{display:grid;gap:1px;background:var(--line);border:1px solid var(--line);grid-template-columns:repeat(auto-fit,minmax(240px,1fr));margin:28px 0}
+.grid>div{background:#07080c;padding:20px}.grid h3{font-size:1.2rem;margin-bottom:6px}.grid p{font-size:.93rem;margin:0 0 .6em}
+.split{display:grid;gap:40px;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));align-items:start}
+.paper{background:var(--paper);color:#1a1712;padding:28px;border-radius:2px}.paper p,.paper li{color:#2b2720}.paper .mono{color:#6b6454}
+[role=tablist]{display:flex;flex-wrap:wrap;gap:6px;border-bottom:1px solid var(--line);margin:20px 0}
+[role=tab]{background:none;border:1px solid transparent;border-bottom:0;color:var(--mut);font:inherit;padding:9px 14px;cursor:pointer}
+[role=tab][aria-selected=true]{color:#fff;border-color:var(--line);background:#0a0c12}
+[role=tabpanel]{min-height:200px}
+button.f{background:none;color:#fff;border:1px solid var(--line);padding:5px 12px;border-radius:99px;font:inherit;font-size:.82rem;cursor:pointer;margin:0 6px 10px 0}
+button.f[aria-pressed=true]{background:#fff;color:#000}
+details{border-top:1px solid var(--line);padding:14px 0}summary{cursor:pointer;font-family:var(--serif);font-size:1.25rem}
+#arch{width:100%;height:auto;background:#06080d;border:1px solid var(--line)}
+#arch g[role=button]{cursor:pointer}#arch rect{fill:#0b0e16;stroke:#7d8aa8;stroke-width:1}
+#arch g[aria-pressed=true] rect,#arch g:focus-visible rect{stroke:var(--amber);stroke-width:2}
+#arch text{fill:#fff;font:13px var(--sans);text-anchor:middle;pointer-events:none}#arch .ln{stroke:#55607a;stroke-width:1;fill:none}
+#info{border:1px solid var(--line);padding:20px;margin-top:14px;min-height:150px}#info h3{font-size:1.5rem}
+dl{display:grid;grid-template-columns:auto 1fr;gap:4px 16px;font-size:.92rem;margin:12px 0 0}dt{color:var(--mut)}dd{margin:0}
+.chart{width:100%;height:auto}.chart text{fill:#cfd5e3;font:11px var(--mono)}.chart .ax{stroke:#666}
+button:disabled,input:disabled{opacity:.55;cursor:not-allowed}
+input{background:#fff;border:1px solid #888;color:#000;padding:10px;font:inherit;width:100%;max-width:340px;margin:4px 0 12px}
+.lk{display:block;text-decoration:none;font-family:var(--serif);font-size:1.3rem}
+footer{background:rgba(2,3,6,.93);padding:80px clamp(18px,6vw,90px) 40px}footer h2{font-size:clamp(1.8rem,4vw,3rem);max-width:22ch}
+footer ul{list-style:none;padding:0;display:flex;flex-wrap:wrap;gap:8px 24px}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.cl,#bird path{animation:none}}
+</style>
+</head>
+<body>
+<div id="sky" aria-hidden="true"><div class="glow"></div><div class="stars"></div><div id="moon"></div>
+<div class="cl c1"><i style="left:6%;top:20%;width:26%;height:30%"></i><i style="left:22%;top:10%;width:20%;height:28%"></i><i style="left:62%;top:30%;width:28%;height:26%"></i></div>
+<div class="cl c2"><i style="left:44%;top:12%;width:22%;height:22%"></i><i style="left:2%;top:44%;width:24%;height:22%"></i><i style="left:78%;top:8%;width:18%;height:20%"></i></div>
+<div class="cl c3"><i style="left:-4%;top:40%;width:44%;height:60%"></i><i style="left:24%;top:30%;width:34%;height:50%"></i></div></div>
+<div id="grain" aria-hidden="true"></div>
+<svg id="bird" viewBox="0 0 40 24" aria-hidden="true"><path d="M2 14 Q10 2 20 12 Q30 2 38 14"/></svg>
+
+<header>
+<a class="brand" href="#top" aria-label="Oblivion — CALYX home">
+<!-- Inline vector approximation of the Oblivion mark; not the original artwork -->
+<svg width="34" height="34" viewBox="0 0 40 40" aria-hidden="true"><path d="M7 11 20 4l13 7" fill="none" stroke="#fff" stroke-width="3.4"/><circle cx="20" cy="26" r="9.5" fill="none" stroke="#fff" stroke-width="4"/></svg>CALYX</a>
+<div class="tog" role="group" aria-label="Sky"><button data-sky="auto" aria-pressed="true">Auto</button><button data-sky="day" aria-pressed="false">Day</button><button data-sky="night" aria-pressed="false">Night</button></div>
+<button class="mbtn" id="mbtn" aria-expanded="false" aria-controls="nav">Menu</button>
+<nav id="nav" aria-label="Primary">
+<a href="#about">About</a><a href="#architecture">Architecture</a><a href="#products">Products</a><a href="#research">Research</a><a href="#security">Security</a><a href="#observatory">Observatory</a><a href="#network">Network</a></nav>
+</header>
+
+<main>
+<section class="hero" id="top">
+<svg width="170" viewBox="0 0 170 46" role="img" aria-label="Oblivion wordmark (vector approximation)"><path d="M6 14 20 7l14 7" fill="none" stroke="#fff" stroke-width="3.6"/><circle cx="20" cy="29" r="10" fill="none" stroke="#fff" stroke-width="4.4"/><text x="38" y="38" fill="#fff" font-family="system-ui,sans-serif" font-weight="700" font-size="22">bli/vion</text></svg>
+<h1>CALYX</h1>
+<h2>Intelligence, cultivated.</h2>
+<p>CALYX explores the intersection of local artificial intelligence, model collaboration and defensive cybersecurity engineering. It is an Oblivion initiative.</p>
+<div class="scroll"><b></b><span class="mono" style="color:#fff">Scroll to read</span></div>
+</section>
+
+<section class="pan" id="about"><div class="wrap">
+<span class="badge s">Initiative, not a model</span>
+<h2>Local intelligence. Defensive engineering. Control by design.</h2>
+<div class="split"><div>
+<p>CALYX is an engineering initiative by Oblivion. It asks how AI can support defensive security work, and how people can have a better experience running language models on their own machines.</p>
+<p>It is not a foundation model, and it does not perform autonomous cyber defense. This page separates what exists, what is experimental, and what remains a design goal.</p></div>
+<div><p>Local models offer private, controllable workflows. Working with several of them creates orchestration problems. And a capable model is not enough for security work: it needs boundaries, verification, and behavior a person can understand.</p>
+<p>The three products, Angra, Nythos and Nythos Plus, each address one of those problems.</p></div></div>
+<div class="grid">
+<div><h3>Angra</h3><p>Connects and coordinates local models.</p></div>
+<div><h3>Nythos</h3><p>Gives a local assistant inspectable, user-controlled memory.</p></div>
+<div><h3>Nythos Plus</h3><p>Extends the family toward adaptive effort.</p></div></div>
+</div></section>
+
+<section class="pan" id="architecture"><div class="wrap">
+<span class="badge i">Conceptual architecture · not runtime telemetry</span>
+<h2>How a task could move through the system.</h2>
+<p>Select a node, by pointer or keyboard, to see its role, inputs, outputs and limits. Nothing here reports a live connection or status.</p>
+<svg id="arch" viewBox="0 0 760 350" role="group" aria-label="Conceptual architecture diagram"></svg>
+<div id="info" aria-live="polite"><p class="mono">Select a node to read about it.</p></div>
+</div></section>
+
+<section class="pan" id="products"><div class="wrap">
+<span class="badge">Product family</span>
+<h2>Three tools, one direction.</h2>
+<div id="ptabs"></div>
+</div></section>
+
+<section class="pan" id="research"><div class="wrap">
+<span class="badge s">Research questions</span>
+<h2>What CALYX investigates, and what it has measured.</h2>
+<p>These are open questions, not conclusions. Each chart states where its numbers come from.</p>
+<div id="rdetails"></div>
+<div class="split" style="margin-top:36px"><div id="ch1"></div><div id="ch2"></div></div>
+</div></section>
+
+<section class="pan" id="security"><div class="wrap">
+<h2>Security is an engineering discipline.</h2>
+<div class="split"><div>
+<p>Running a model locally can give people more control over where their data goes. It does not make a system secure or private by itself. That depends on the implementation, operating environment, configuration, dependencies and ongoing maintenance.</p>
+<p>The principles below are engineering goals, informed by OWASP ASVS and NIST SSDF as references. They are not certifications, and CALYX has not been externally audited.</p></div>
+<div class="paper"><p class="mono">Verification status</p><p>No external audit published. No penetration test published. Release signing not published. Treat every claim on this page as design intent unless it links to evidence.</p></div></div>
+<div class="grid" id="princ"></div>
+</div></section>
+
+<section class="pan" id="observatory"><div class="wrap">
+<span class="badge s">Static published information</span><span class="badge i">No live telemetry</span>
+<h2>System Observatory.</h2>
+<p>A public record of what is known about CALYX. Values come from the project’s own description; anything unknown is marked as such. Live data appears only if a real API is configured.</p>
+<div id="otabs"></div>
+</div></section>
+
+<section class="pan" id="admin"><div class="wrap">
+<span class="badge">Not configured</span>
+<h2>Administrative control center.</h2>
+<div class="split"><div>
+<p>This site is static and hosted on GitHub Pages. A static page cannot hold secrets, authenticate administrators or enforce permissions, so there is deliberately no working login here.</p>
+<p>Planned scope: public project descriptions, release notes, documentation links, an audit trail of authorized changes, and service health when real monitoring data exists. Each of these needs a trusted server with server-side authentication and authorization.</p></div>
+<div class="paper"><p class="mono">API boundary</p>
+<p>Set <code>CALYX_API_BASE</code> in the script to a real HTTPS endpoint. It is empty by default, so privileged actions stay disabled.</p>
+<label for="u">Administrator sign-in</label><br><input id="u" disabled placeholder="Unavailable: no backend configured"><br>
+<button class="f" disabled style="color:#000;border-color:#000">Sign in</button>
+<p id="apistate" class="mono" role="status"></p></div></div>
+</div></section>
+
+<section class="pan" id="network"><div class="wrap">
+<h2>The Oblivion network.</h2>
+<p>Each site has its own role. They link to one another but share no database or backend.</p>
+<div class="grid" id="sites"></div>
+</div></section>
+</main>
+
+<footer id="footer"><div class="wrap">
+<svg width="150" viewBox="0 0 170 46" role="img" aria-label="Oblivion wordmark (vector approximation)"><path d="M6 14 20 7l14 7" fill="none" stroke="#fff" stroke-width="3.6"/><circle cx="20" cy="29" r="10" fill="none" stroke="#fff" stroke-width="4.4"/><text x="38" y="38" fill="#fff" font-family="system-ui,sans-serif" font-weight="700" font-size="22">bli/vion</text></svg>
+<h2>Systems designed with control in mind.</h2>
+<p>CALYX studies local AI and defensive engineering with a plain rule: say what works, say what does not, and let people inspect the difference.</p>
+<ul id="flinks"></ul>
+<ul><li><a href="#products">Products</a></li><li><a href="#research">Research</a></li><li><a href="#observatory">Documentation links</a></li></ul>
+<p class="mono">Security headers (CSP, HSTS, frame policy) must be set by the host.</p>
+</div></footer>
+
+<script>
+"use strict";
+/* ===== Config ===== */
+// Single configuration point for a genuine, authenticated API. Empty = not configured.
+const CALYX_API_BASE = "";
+const RM = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* ===== Safe DOM helpers (no innerHTML) ===== */
+const $ = (q, r = document) => r.querySelector(q);
+function h(t, a = {}, ...k) { const e = document.createElement(t); for (const [n, v] of Object.entries(a)) n === "class" ? e.className = v : e.setAttribute(n, v); for (const c of k.flat()) e.append(c); return e; }
+const NS = "http://www.w3.org/2000/svg";
+function s(t, a = {}, ...k) { const e = document.createElementNS(NS, t); for (const [n, v] of Object.entries(a)) e.setAttribute(n, v); for (const c of k.flat()) e.append(c); return e; }
+function safeUrl(u) { try { return new URL(u).protocol === "https:" ? u : null; } catch { return null; } }
+function link(l, cls) { const u = safeUrl(l.u); return u ? h("a", { href: u, target: "_blank", rel: "noopener noreferrer", class: cls || "" }, l.n) : h("span", {}, l.n + " (unavailable)"); }
+
+/* ===== Public data ===== */
+const LINKS = [
+  { n: "Oblivion", u: "https://shokribardiya.github.io/Oblivions0.github.io/", r: "The wider engineering organization." },
+  { n: "OblivionStudioDev", u: "https://shokribardiya.github.io/OblivionStudioDev/", r: "The development and engineering environment." },
+  { n: "CALYX website", u: "https://shokribardiya.github.io/Oblivion-Project-Calyx/", r: "Local AI, model collaboration and defensive security." },
+  { n: "CALYX repository", u: "https://github.com/shokribardiya/Oblivion-Project-Calyx", r: "Source for this site." }
+];
+const NODES = [
+  { id: "obj", n: "User objective", x: 20, y: 20, role: "A person states what they want done.", i: "Natural-language request", o: "A scoped task", l: "Ambiguous goals produce ambiguous work; the system should ask rather than guess." },
+  { id: "org", n: "Task organization", x: 300, y: 20, role: "Breaks the objective into steps and decides what needs review.", i: "Scoped task", o: "Ordered steps", l: "Design goal. Planning quality depends on the model used." },
+  { id: "sel", n: "Model / tool selection", x: 580, y: 20, role: "Chooses a primary model, an optional secondary model and the tools each may use.", i: "Steps, available models", o: "Routing choice", l: "Angra explores this for compatible LM Studio setups. Not every model is supported." },
+  { id: "exe", n: "Local execution", x: 580, y: 150, role: "Runs the model on the user’s machine inside permitted boundaries.", i: "Routed step", o: "Draft output", l: "Local does not mean secure. Safety depends on host configuration and dependencies." },
+  { id: "rev", n: "Review & output", x: 300, y: 150, role: "Checks output against constraints and presents it with its provenance.", i: "Draft output", o: "Reviewed result", l: "Automated review can miss errors. See the Nythos conflict-engine limit under Research." },
+  { id: "hum", n: "Defensive verification & human oversight", x: 20, y: 150, role: "A person approves sensitive actions; defensive checks run before anything is applied.", i: "Reviewed result", o: "Approved action or rejection", l: "Design principle. Fail closed where appropriate." },
+  { id: "mem", n: "Context & memory (where supported)", x: 580, y: 280, role: "Stores user-controlled context the person can inspect and delete.", i: "Approved facts", o: "Compiled workspace packet", l: "Nythos direction. Model-written entries are marked unverified, not treated as fact." }
+];
+const EDGES = [["obj", "org"], ["org", "sel"], ["sel", "exe"], ["exe", "rev"], ["rev", "hum"], ["mem", "exe", 1]];
+const PRODUCTS = [
+  { n: "Angra", st: "Development status not published", head: "A bridge between local models.", body: [
+    "Angra is an integration and collaboration layer for LM Studio and Bionic. It is not a foundation model and never runs model weights itself.",
+    "The project’s tooling covers plugin installation, discovery of installed models, primary and secondary model selection, permissions between linked models, and doctor and self-test commands.",
+    "Hardware-conscious operation is a design objective. Compatibility with every model, and any automatic speed-up, are not claimed."],
+    pts: ["Primary and secondary model roles", "Workflow coordination for multiple models", "Install, status and repair commands"], doc: "Documentation: not published" },
+  { n: "Nythos", st: "Experimental · local measurements only", head: "Memory the user can see and delete.", body: [
+    "Nythos is an external global workspace: a memory server a local assistant can reach over MCP, so context persists across sessions.",
+    "The central idea is user control. Remembered items can be inspected and selectively removed, and entries written by a model are labeled unverified instead of being trusted.",
+    "A website cannot reach anyone’s LM Studio without an explicit local connection and permission, and this one makes no such connection."],
+    pts: ["Persistent, inspectable memory", "J Space concept for workspace context", "Model-written entries marked as candidates"], doc: "Documentation: not published" },
+  { n: "Nythos Plus", st: "Direction · details not published", head: "The extended local assistant.", body: [
+    "Nythos Plus is the extended direction of the family: an adaptive-effort runtime for LM Studio that builds on the Nythos and Angra baselines.",
+    "No specifications, context lengths, compatibility lists, benchmark scores or release dates are published, so none are given here."],
+    pts: ["Adaptive effort per task", "Builds on Nythos and Angra"], doc: "Documentation: not published" }
+];
+const PRINCIPLES = [
+  ["Least privilege", "Models and tools receive only the access a step needs."], ["Explicit trust boundaries", "Model output is data until something verifies it."],
+  ["Defense in depth", "No single check is trusted to catch everything."], ["Input validation", "Inputs are checked before they reach tools or storage."],
+  ["Fail closed", "When a check cannot run, the action does not proceed."], ["Permission boundaries", "Each model–tool pairing is allowed or denied explicitly."],
+  ["Human review", "Sensitive actions wait for a person."], ["Understandable failures", "Errors say what happened and what to do next."],
+  ["Versioned releases", "Changes are tracked so behavior can be traced."], ["Testing and verification", "Claims should link to a test or a measurement."]
+];
+const RESEARCH = [
+  ["Local-AI engineering", "What does it take to make local models dependable on ordinary hardware?"],
+  ["Model collaboration", "When does a second model help a primary one, and when does it only add cost? Angra’s estimates below are heuristic."],
+  ["Defensive applications", "Where can AI assist defenders while a human keeps final authority?"],
+  ["Memory and user control", "How should remembered context be stored, shown, challenged and deleted?"],
+  ["Reliability and verification", "Observed limit: in a Nythos test, a claim that contradicted a “standard library only” constraint was not flagged by the lexical conflict engine (CONFLICTS: none). It appeared only as UNVERIFIED."],
+  ["Performance and efficiency", "How does memory-operation latency grow with store size? Measured numbers are charted below."]
+];
+const NYTHOS_BENCH = { sizes: ["100", "1,000", "5,000"], series: [["Recall", [2.6, 4.2, 18.1], "#4d8fe0"], ["Workspace activate", [8.2, 29.1, 33.5], "#e8734a"], ["Memory write", [0.4, 2.4, 14.4], "#27b07a"]] };
+const ANGRA_EST = { cats: ["Text", "Coding", "Agent", "Efficiency"], series: [["GLM-4.6V-Flash", [0.83, 1.29, 0.05, -0.3], "#4d8fe0"], ["Gemma 4 E4B", [1.25, 1.43, 0.3, -0.3], "#e8734a"], ["Gemma 4 12B", [0.55, 0.66, 0.15, -0.3], "#27b07a"], ["GPT-OSS 20B", [0.2, 0.2, 0, -0.3], "#dd5555"]] };
+const RECORDS = [
+  { t: "Nythos latency vs store size", k: "Measured", d: "Measured locally in a Linux sandbox: Python 3.12.3, SQLite WAL, synchronous=FULL. MCP round-trip: status 2.7 ms, recall 17.2 ms, workspace 54.9 ms. Not measured in LM Studio or on Windows." },
+  { t: "Angra change estimate", k: "Illustrative", d: "Heuristic 0–10 scores comparing a model alone with the same model plus a helper. These are estimates, not benchmark results." },
+  { t: "Nythos conflict-engine limit", k: "Observed limit", d: "A claim contradicting a stated constraint was not flagged as a conflict. It was shown as UNVERIFIED instead." }
+];
+const REGISTRY = [
+  { n: "CALYX", c: "Initiative", d: "Local AI and defensive engineering." }, { n: "Angra", c: "Product", d: "Model integration and coordination." },
+  { n: "Nythos", c: "Product", d: "User-controlled memory workspace." }, { n: "Nythos Plus", c: "Product", d: "Adaptive-effort direction." },
+  { n: "Oblivion", c: "Site", d: LINKS[0].r }, { n: "OblivionStudioDev", c: "Site", d: LINKS[1].r }, { n: "CALYX website", c: "Site", d: LINKS[2].r }, { n: "CALYX repository", c: "Repository", d: LINKS[3].r }
+];
+
+/* ===== Sky engine ===== */
+const STOPS = [
+  { t: [44, 110, 190], b: [150, 196, 232], c: [255, 255, 255], ca: .9, w: 0, s: 0, m: .25 },
+  { t: [58, 92, 150], b: [236, 168, 110], c: [255, 210, 160], ca: .85, w: .7, s: 0, m: .35 },
+  { t: [18, 30, 70], b: [70, 82, 132], c: [140, 152, 196], ca: .5, w: .1, s: .35, m: .6 },
+  { t: [3, 5, 14], b: [10, 16, 36], c: [60, 72, 110], ca: .25, w: 0, s: 1, m: 1 }
+];
+const mix = (a, b, f) => a + (b - a) * f, mixv = (a, b, f) => a.map((v, i) => Math.round(mix(v, b[i], f)));
+let skyMode = "auto", cur = 0, target = 0, raf = 0;
+function paint(p) {
+  const x = Math.min(.9999, Math.max(0, p)) * 3, i = Math.floor(x), f = x - i, A = STOPS[i], B = STOPS[i + 1], r = document.documentElement.style;
+  r.setProperty("--st", mixv(A.t, B.t, f).join(",")); r.setProperty("--sb", mixv(A.b, B.b, f).join(","));
+  r.setProperty("--cl", mixv(A.c, B.c, f).join(",")); r.setProperty("--ca", mix(A.ca, B.ca, f).toFixed(3));
+  r.setProperty("--warm", mix(A.w, B.w, f).toFixed(3)); r.setProperty("--stars", mix(A.s, B.s, f).toFixed(3)); r.setProperty("--moon", mix(A.m, B.m, f).toFixed(3));
+}
+function wanted() { if (skyMode === "day") return 0; if (skyMode === "night") return 1; return scrollY / Math.max(1, document.documentElement.scrollHeight - innerHeight); }
+function step() { raf = 0; cur += (target - cur) * .06; if (Math.abs(target - cur) < .0008) cur = target; paint(cur); if (cur !== target && !document.hidden) raf = requestAnimationFrame(step); }
+function update() { target = wanted(); if (RM) { cur = target; paint(cur); } else if (!raf) raf = requestAnimationFrame(step); }
+addEventListener("scroll", update, { passive: true }); addEventListener("resize", update);
+document.querySelectorAll("[data-sky]").forEach(b => b.addEventListener("click", () => {
+  skyMode = b.dataset.sky; document.querySelectorAll("[data-sky]").forEach(x => x.setAttribute("aria-pressed", String(x === b))); update();
+}));
+update();
+
+/* ===== Occasional bird ===== */
+let birdTimer = 0;
+function flyBird() {
+  const el = $("#bird");
+  if (RM || document.hidden || !el.animate) return;
+  const ltr = Math.random() < .5, y = 8 + Math.random() * 30, dy = -8 + Math.random() * 16, d = ltr ? 1 : -1;
+  el.animate([
+    { transform: `translate(${ltr ? -6 : 106}vw,${y}vh) scaleX(${d})`, opacity: 0 },
+    { opacity: .75, offset: .12 }, { opacity: .75, offset: .88 },
+    { transform: `translate(${ltr ? 106 : -6}vw,${y + dy}vh) scaleX(${d})`, opacity: 0 }
+  ], { duration: 30000 + Math.random() * 14000, easing: "linear" });
+}
+function schedule(first) { clearTimeout(birdTimer); birdTimer = setTimeout(() => { flyBird(); schedule(false); }, first ? 15000 + Math.random() * 45000 : 120000 + Math.random() * 120000); }
+document.addEventListener("visibilitychange", () => { if (document.hidden) clearTimeout(birdTimer); else { if (!RM) schedule(true); update(); } });
+if (!RM) schedule(true);
+
+/* ===== Navigation ===== */
+const nav = $("#nav"), mb = $("#mbtn");
+mb.addEventListener("click", () => { const o = nav.classList.toggle("open"); mb.setAttribute("aria-expanded", String(o)); });
+nav.addEventListener("click", e => { if (e.target.tagName === "A") { nav.classList.remove("open"); mb.setAttribute("aria-expanded", "false"); } });
+const io = new IntersectionObserver(es => es.forEach(e => {
+  if (!e.isIntersecting) return;
+  nav.querySelectorAll("a").forEach(a => a.getAttribute("href") === "#" + e.target.id ? a.setAttribute("aria-current", "true") : a.removeAttribute("aria-current"));
+}), { rootMargin: "-40% 0px -55% 0px" });
+document.querySelectorAll("main section").forEach(x => io.observe(x));
+
+/* ===== Tabs helper ===== */
+function tabs(root, items, render) {
+  const list = h("div", { role: "tablist" }), panel = h("div", { role: "tabpanel", tabindex: "0" }); let btns = [];
+  function sel(i) { btns.forEach((b, j) => { b.setAttribute("aria-selected", String(i === j)); b.tabIndex = i === j ? 0 : -1; }); panel.replaceChildren(render(items[i])); panel.setAttribute("aria-labelledby", btns[i].id); }
+  btns = items.map((it, i) => {
+    const b = h("button", { role: "tab", id: root.id + "t" + i }, it.n); b.addEventListener("click", () => sel(i));
+    b.addEventListener("keydown", e => { const k = { ArrowRight: 1, ArrowLeft: -1 }[e.key]; if (k) { const n = (i + k + items.length) % items.length; sel(n); btns[n].focus(); } });
+    list.append(b); return b;
+  });
+  root.append(list, panel); sel(0);
+}
+
+/* ===== Architecture ===== */
+(function () {
+  const svg = $("#arch"), info = $("#info"), by = Object.fromEntries(NODES.map(n => [n.id, n])), gs = [];
+  svg.append(s("defs", {}, s("marker", { id: "ar", viewBox: "0 0 8 8", refX: 7, refY: 4, markerWidth: 7, markerHeight: 7, orient: "auto" }, s("path", { d: "M0 0 8 4 0 8z", fill: "#7d8aa8" }))));
+  EDGES.forEach(([a, b, dash]) => {
+    const A = by[a], B = by[b], dx = Math.sign(B.x - A.x) * 80, dy = Math.sign(B.y - A.y) * 30;
+    svg.append(s("line", { class: "ln", x1: A.x + 80 + dx, y1: A.y + 30 + dy, x2: B.x + 80 - dx, y2: B.y + 30 - dy, "marker-end": "url(#ar)", "stroke-dasharray": dash ? "4 4" : "0" }));
+  });
+  NODES.forEach(n => {
+    const g = s("g", { role: "button", tabindex: "0", "aria-pressed": "false", "aria-label": n.n }, s("rect", { x: n.x, y: n.y, width: 160, height: 60, rx: 3 }));
+    const lines = []; let ln = ""; n.n.split(" ").forEach(w => { if ((ln + " " + w).trim().length > 20) { lines.push(ln); ln = w; } else ln = (ln + " " + w).trim(); }); lines.push(ln);
+    lines.slice(0, 3).forEach((t, i) => g.append(s("text", { x: n.x + 80, y: n.y + 34 + (i - (Math.min(lines.length, 3) - 1) / 2) * 15 }, t)));
+    const pick = () => {
+      gs.forEach(x => x.setAttribute("aria-pressed", "false")); g.setAttribute("aria-pressed", "true");
+      info.replaceChildren(h("h3", {}, n.n), h("span", { class: "badge i" }, "Conceptual"), h("p", {}, n.role),
+        h("dl", {}, h("dt", {}, "Inputs"), h("dd", {}, n.i), h("dt", {}, "Outputs"), h("dd", {}, n.o), h("dt", {}, "Limits"), h("dd", {}, n.l)));
+    };
+    g.addEventListener("click", pick); g.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pick(); } });
+    svg.append(g); gs.push(g);
+  });
+})();
+
+/* ===== Products ===== */
+tabs($("#ptabs"), PRODUCTS, p => h("article", {}, h("span", { class: "badge" }, p.st), h("h3", { style: "font-size:clamp(1.8rem,4vw,2.8rem);margin:8px 0 16px" }, p.head),
+  h("div", { class: "split" }, h("div", {}, p.body.map(t => h("p", {}, t))), h("div", { class: "paper" }, h("p", { class: "mono" }, p.n + " · focus"), h("ul", {}, p.pts.map(t => h("li", {}, t))), h("p", { class: "mono" }, p.doc))),
+  h("p", { class: "mono" }, "Related source: ", link(LINKS[3]), " (this site’s repository; product repositories are not listed because no verified addresses were supplied).")));
+
+/* ===== Research ===== */
+RESEARCH.forEach(([t, d]) => $("#rdetails").append(h("details", {}, h("summary", {}, t), h("p", { style: "margin-top:10px" }, d))));
+function bars(el, title, labels, series, o) {
+  const W = 520, H = 300, L = 40, B = 50, T = 20, min = o.min || 0, sc = v => H - B - (v - min) / (o.max - min) * (H - B - T);
+  const svg = s("svg", { viewBox: `0 0 ${W} ${H}`, class: "chart", role: "img", "aria-label": title + ". " + o.note });
+  [min, (min + o.max) / 2, o.max].forEach(v => svg.append(s("line", { class: "ax", x1: L, x2: W, y1: sc(v), y2: sc(v), opacity: .3 }), s("text", { x: 2, y: sc(v) + 4 }, String(+v.toFixed(2)))));
+  svg.append(s("line", { class: "ax", x1: L, x2: W, y1: sc(0), y2: sc(0) }));
+  const gw = (W - L) / labels.length, bw = Math.min(26, (gw - 14) / series.length);
+  labels.forEach((lb, i) => {
+    svg.append(s("text", { x: L + gw * i + gw / 2, y: H - B + 36, "text-anchor": "middle" }, lb));
+    series.forEach(([, v, c], j) => {
+      const x = L + gw * i + (gw - bw * series.length) / 2 + bw * j, y = sc(Math.max(0, v[i])), y0 = sc(Math.min(0, v[i]));
+      svg.append(s("rect", { x, y, width: bw - 2, height: Math.max(1, y0 - y), fill: c }));
+      if (o.vals) svg.append(s("text", { x: x + bw / 2 - 1, y: y - 4, "text-anchor": "middle" }, String(v[i])));
+    });
+  });
+  el.append(h("h3", { style: "font-size:1.3rem;margin-bottom:6px" }, title), h("span", { class: "badge " + (o.badge === "Measured" ? "s" : "i") }, o.badge), svg,
+    h("div", { class: "mono", style: "display:flex;flex-wrap:wrap;gap:4px 14px;margin:6px 0" }, series.map(([n, , c]) => h("span", {}, h("span", { style: "color:" + c }, "■ "), n))),
+    h("p", { class: "mono" }, o.note));
+}
+bars($("#ch1"), "Nythos latency vs stored memories (ms)", NYTHOS_BENCH.sizes, NYTHOS_BENCH.series, { max: 35, vals: true, badge: "Measured", note: "Source: local measurement, Linux sandbox, Python 3.12.3, SQLite WAL, synchronous=FULL. Not LM Studio, not Windows." });
+bars($("#ch2"), "Angra: estimated change vs model alone (points of 10)", ANGRA_EST.cats, ANGRA_EST.series, { max: 1.5, min: -.5, badge: "Illustrative", note: "Illustrative heuristic estimate for strong hardware. Not a measurement or benchmark result." });
+
+/* ===== Security ===== */
+PRINCIPLES.forEach(([t, d]) => $("#princ").append(h("div", {}, h("h3", {}, t), h("p", {}, d))));
+
+/* ===== API adapter (never fabricates responses) ===== */
+async function apiGet(path) {
+  if (!CALYX_API_BASE || !safeUrl(CALYX_API_BASE)) return { state: "not-configured" };
+  try { const r = await fetch(new URL(path, CALYX_API_BASE), { credentials: "omit", headers: { Accept: "application/json" } }); return r.ok ? { state: "ok", data: await r.json() } : { state: "unavailable" }; }
+  catch { return { state: "unavailable" }; }
+}
+apiGet("/public/status").then(r => { $("#apistate").textContent = { "not-configured": "API: not configured. Privileged actions disabled.", unavailable: "API: data unavailable.", ok: "API: reachable (read-only public data)." }[r.state]; });
+
+/* ===== Observatory ===== */
+let regFilter = "All";
+const OTABS = [
+  { n: "Registry", f() {
+    const box = h("div"), list = h("div");
+    const draw = () => list.replaceChildren(...REGISTRY.filter(r => regFilter === "All" || r.c === regFilter).map(r => h("details", {}, h("summary", {}, r.n), h("p", {}, h("span", { class: "badge" }, r.c), " ", r.d))));
+    ["All", "Initiative", "Product", "Site", "Repository"].forEach(c => {
+      const b = h("button", { class: "f", "aria-pressed": String(c === regFilter) }, c);
+      b.addEventListener("click", () => { regFilter = c; box.querySelectorAll(".f").forEach(x => x.setAttribute("aria-pressed", String(x === b))); draw(); });
+      box.append(b);
+    });
+    draw(); box.append(list); return box; } },
+  { n: "Status", f: () => h("div", {}, h("span", { class: "badge s" }, "Static published information"), PRODUCTS.map(p => h("details", {}, h("summary", {}, p.n), h("p", {}, p.st + ". Live operational status is not published.")))) },
+  { n: "Architecture", f: () => h("div", {}, h("p", {}, "The explorer shows conceptual architecture, not runtime state."), h("a", { href: "#architecture" }, "Open the architecture explorer")) },
+  { n: "Releases", f: () => h("div", {}, h("span", { class: "badge" }, "Last verified release: none published"), h("p", {}, "No versions or release notes have been published for any product. This panel will list them once they exist.")) },
+  { n: "Research", f: () => h("div", {}, RECORDS.map(r => h("details", {}, h("summary", {}, r.t), h("span", { class: "badge " + (r.k === "Measured" ? "s" : "i") }, r.k), h("p", {}, r.d)))) },
+  { n: "Security", f: () => h("div", {}, h("span", { class: "badge i" }, "No external audit published"), h("p", {}, "Principles are design intent. Audit, penetration test and release signing are all unpublished."), h("a", { href: "#security" }, "Read the principles")) },
+  { n: "Links", f: () => h("div", { class: "grid" }, LINKS.map(l => h("div", {}, link(l, "lk"), h("p", { class: "mono" }, l.r))), h("div", {}, h("b", {}, "Angra and Nythos documentation"), h("p", { class: "mono" }, "Unavailable: no verified address supplied."))) }
+];
+tabs($("#otabs"), OTABS, t => t.f());
+
+/* ===== Network and footer ===== */
+LINKS.forEach(l => $("#sites").append(h("div", {}, h("h3", {}, l.n), h("p", {}, l.r), h("p", { class: "mono" }, link({ n: "Visit site", u: l.u })))));
+LINKS.forEach(l => $("#flinks").append(h("li", {}, link(l))));
+</script>
+</body>
+</html>
